@@ -1,0 +1,107 @@
+name: Create Azure Infrastructure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: rg-github-actions-lab
+  AZURE_LOCATION: eastus
+  AZURE_APP_SERVICE_PLAN: asp-github-actions-lab
+  AZURE_WEBAPP_NAME: vijay-github-actions-demo
+
+jobs:
+
+  create-infrastructure:
+    name: Create Azure Resources
+    runs-on: windows-latest
+
+    steps:
+
+      # ---------------------------------------
+      # 1. Login to Azure using GitHub OIDC
+      # ---------------------------------------
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # ---------------------------------------
+      # 2. Verify Azure subscription
+      # ---------------------------------------
+      - name: Verify Azure Subscription
+        shell: pwsh
+        run: |
+          Write-Host "Connected Azure subscription:"
+          az account show --output table
+
+      # ---------------------------------------
+      # 3. Create Resource Group
+      # ---------------------------------------
+      - name: Create Resource Group
+        shell: pwsh
+        run: |
+          Write-Host "Creating Resource Group..."
+
+          az group create `
+            --name $env:AZURE_RESOURCE_GROUP `
+            --location $env:AZURE_LOCATION
+
+      # ---------------------------------------
+      # 4. Create App Service Plan
+      # ---------------------------------------
+      - name: Create App Service Plan
+        shell: pwsh
+        run: |
+          Write-Host "Creating App Service Plan..."
+
+          az appservice plan create `
+            --name $env:AZURE_APP_SERVICE_PLAN `
+            --resource-group $env:AZURE_RESOURCE_GROUP `
+            --location $env:AZURE_LOCATION `
+            --sku B1 `
+            --is-linux
+
+      # ---------------------------------------
+      # 5. Create App Service
+      # ---------------------------------------
+      - name: Create App Service
+        shell: pwsh
+        run: |
+          Write-Host "Creating App Service..."
+
+          az webapp create `
+            --name $env:AZURE_WEBAPP_NAME `
+            --resource-group $env:AZURE_RESOURCE_GROUP `
+            --plan $env:AZURE_APP_SERVICE_PLAN `
+            --runtime "DOTNETCORE:8.0"
+
+      # ---------------------------------------
+      # 6. Display resources
+      # ---------------------------------------
+      - name: Display Created Resources
+        shell: pwsh
+        run: |
+          Write-Host ""
+          Write-Host "======================================"
+          Write-Host "Resource Group"
+          Write-Host "======================================"
+
+          az group show `
+            --name $env:AZURE_RESOURCE_GROUP `
+            --output table
+
+          Write-Host ""
+          Write-Host "======================================"
+          Write-Host "App Service"
+          Write-Host "======================================"
+
+          az webapp show `
+            --name $env:AZURE_WEBAPP_NAME `
+            --resource-group $env:AZURE_RESOURCE_GROUP `
+            --output table
