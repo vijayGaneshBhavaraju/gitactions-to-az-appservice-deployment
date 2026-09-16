@@ -1,0 +1,46 @@
+trigger:
+- none
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  buildConfiguration: Release
+
+stages:
+# ---------------- BUILD ----------------
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        version: '8.0.x'
+
+    - script: |
+        dotnet restore
+        dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
+      displayName: Build and Publish
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: drop
+
+# ---------------- DEPLOY ----------------
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    environment: vijay-approval-env
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'newsc'
+              appType: 'webApp'
+              appName: 'vijayswebapp'
+              package: '$(Pipeline.Workspace)/drop'

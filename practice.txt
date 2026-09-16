@@ -1,0 +1,84 @@
+Hello welcome to my WEB app deployment 
+
+Path i gendrally keep the code in: C:\Users\saich\source\repos
+
+Code: .NET 8
+Code created using Visual studio.
+Code i choose in Visual studio:  asp.net core web app ( Razor Pages)
+This have both Front end and backend.
+
+The only objective is to push the code to App service successfully and replicate the web applicate in app service with out fail.
+
+Git :
+
+CD path of the folder in PowerShell.
+
+Ls to find if all the csproj and SLN files are present
+
+git init to initiate empty repo
+
+below 2 are not mandatory:
+
+git config --global user.name "Bhavaraju Vijay Ganesh "
+git config --global user.email "vijaydurgaganesh112@gmail.com"
+
+git add .
+
+git commit - m "initial commit of my webpage"
+
+git branch -M main
+git remote add origin https://dev.azure.com/<ORG>/<PROJECT>/_git/vijayswebpage
+
+
+Proper YAML i used to deploy the code to Web app:
+
+trigger:
+- none
+
+pool:
+  vmImage: windows-latest
+
+variables:
+  buildConfiguration: Release
+
+stages:
+# ---------------- BUILD ----------------
+- stage: Build
+  jobs:
+  - job: Build
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        version: '8.0.x'
+
+    - script: |
+        dotnet restore
+        dotnet publish -c Release -o $(Build.ArtifactStagingDirectory)
+      displayName: Build and Publish
+
+    - publish: $(Build.ArtifactStagingDirectory)
+      artifact: drop
+
+# ---------------- DEPLOY ----------------
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - deployment: Deploy
+    environment: vijay-approval-env
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - task: AzureWebApp@1
+            inputs:
+              azureSubscription: 'newsc'
+              appType: 'webApp'
+              appName: 'vijayswebapp'
+              package: '$(Pipeline.Workspace)/drop'
+
+
+
+# this is 100% successful.
