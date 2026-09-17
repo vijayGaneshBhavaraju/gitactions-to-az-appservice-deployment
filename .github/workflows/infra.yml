@@ -1,4 +1,4 @@
-name: Create Azure Infrastructure
+name: Create Azure infra via Git
 
 on:
   workflow_dispatch:
