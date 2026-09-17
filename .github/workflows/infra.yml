@@ -9,7 +9,7 @@ permissions:
 
 env:
   AZURE_RESOURCE_GROUP: rg-github-actions-lab
-  AZURE_LOCATION: eastus
+  AZURE_LOCATION: South India
   AZURE_APP_SERVICE_PLAN: asp-github-actions-lab
   AZURE_WEBAPP_NAME: vijay-github-actions-demo
 
