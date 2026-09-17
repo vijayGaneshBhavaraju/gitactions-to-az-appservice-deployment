@@ -104,4 +104,4 @@ jobs:
           az webapp show `
             --name $env:AZURE_WEBAPP_NAME `
             --resource-group $env:AZURE_RESOURCE_GROUP `
-            --output table
+            --output json
