@@ -91,17 +91,14 @@ jobs:
           Write-Host "======================================"
           Write-Host "Resource Group"
           Write-Host "======================================"
-
-          az group show `
-            --name $env:AZURE_RESOURCE_GROUP `
-            --output table
+          az group show --name $env:AZURE_RESOURCE_GROUP --output table
 
           Write-Host ""
           Write-Host "======================================"
           Write-Host "App Service"
           Write-Host "======================================"
-
           az webapp show `
             --name $env:AZURE_WEBAPP_NAME `
             --resource-group $env:AZURE_RESOURCE_GROUP `
-            --output json
+            --query "{Name:name, State:state, Hostname:defaultHostName, Location:location}" `
+            --output table
